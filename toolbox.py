@@ -3,8 +3,8 @@ Toolbox for performing common operations offline.
 
 FEATURES:
 2024-07-12:
-- Image of document to scanned image
-- Image of document to text file
+- Image of document to scanned image.
+- Image of document to text file.
 
 Created: 2024-07-12
 Updated: 2024-07-12
