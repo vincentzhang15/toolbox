@@ -6,6 +6,9 @@ FEATURES:
 - Image of document to scanned image.
 - Image of document to text file.
 
+2024-07-13:
+- Convert curl command to be windows compatible.
+
 Created: 2024-07-12
 Updated: 2024-07-12
 """
@@ -15,6 +18,8 @@ import numpy as np
 from PIL import Image
 import pytesseract
 from pytesseract import Output
+import pyperclip
+import re
 
 
 class ImageOperations:
@@ -68,10 +73,28 @@ class ImageOperations:
 
         return scan
 
+class CommandOperations:
+    def curl2win():
+        """Copy curl command to clipboard and this function will replace the
+        clipboard with the converted windows-compatible command.
+        """
+        curl = pyperclip.paste()
+        curl = curl.replace('\\', '^')
+        a,b = curl.split('-d')
+        b = b.replace("\r\n", " ")
+        b = b.replace('\"', '\\"')
+        b = b.replace("'", '"')
+        b = re.sub("\s{2,}", "", b)
+
+        curl = f"{a}-d{b}"
+        pyperclip.copy(curl)
+        print("Copied:", curl)
 
 img2scan = ImageOperations.img2scan
 img2text = ImageOperations.img2text
+curl2win = CommandOperations.curl2win
 
 if __name__ == "__main__":
-    img2scan('Consolidated.png')
+    # img2scan('Consolidated.png')
     # img2text('Consolidated.png')
+    curl2win()
