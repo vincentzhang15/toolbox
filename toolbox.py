@@ -75,7 +75,7 @@ class ImageOperations:
 
 class CommandOperations:
     def curl2win():
-        """Copy curl command to clipboard and this function will replace the
+        """Copy curl command to clipboard and this method will replace the
         clipboard with the converted windows-compatible command.
         """
         curl = pyperclip.paste()
