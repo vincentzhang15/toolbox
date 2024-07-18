@@ -9,8 +9,11 @@ FEATURES:
 2024-07-13:
 - Convert curl command to be windows compatible.
 
+2024-07-18:
+- Convert .HEIC image to .jpg
+
 Created: 2024-07-12
-Updated: 2024-07-12
+Updated: 2024-07-18
 """
 
 import cv2
@@ -72,6 +75,16 @@ class ImageOperations:
             f.write('\n'.join(lines))
 
         return scan
+
+    def heic2jpg(path):
+        """HEIC to JPG conversion using pillow_heif.
+        Ref:
+        https://stackoverflow.com/questions/54395735/how-to-work-with-heic-image-file-types-in-python
+        """
+        from pillow_heif import register_heif_opener
+        register_heif_opener()
+        image = Image.open(path)
+        image.save(path.rstrip('.HEIC').rstrip('.heic') + '.jpg')
 
 class CommandOperations:
     def curl2win():
