@@ -12,8 +12,11 @@ FEATURES:
 2024-07-18:
 - Convert .HEIC image to .jpg
 
+2024-07-19:
+- Extract audio segment from an audio file.
+
 Created: 2024-07-12
-Updated: 2024-07-18
+Updated: 2024-07-19
 """
 
 import cv2
@@ -23,7 +26,7 @@ import pytesseract
 from pytesseract import Output
 import pyperclip
 import re
-
+import subprocess
 
 class ImageOperations:
     def _draw_rectangles(img, objs):
@@ -103,11 +106,23 @@ class CommandOperations:
         pyperclip.copy(curl)
         print("Copied:", curl)
 
+class MediaOperations:
+    def extract_audio(path, start="00:00:00", stop="00:00:15", output="extracted.mp3"):
+        """Extract audio segment.
+        Input and output files should both be .mp3.
+        """
+        cmd = rf"ffmpeg -i {path} -ss {start} -to {stop} -c copy -acodec copy -y {output}"
+        print("Running:", cmd)
+        subprocess.run(cmd, shell=True)
+
 img2scan = ImageOperations.img2scan
 img2text = ImageOperations.img2text
+heic2jpg = ImageOperations.heic2jpg
 curl2win = CommandOperations.curl2win
+extract_audio = MediaOperations.extract_audio
 
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
     # img2text('Consolidated.png')
-    curl2win()
+    # curl2win()
+    extract_audio("audio.mp3", output="extracted.mp3")
