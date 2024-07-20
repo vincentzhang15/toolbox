@@ -10,7 +10,7 @@ FEATURES:
 - Convert curl command to be windows compatible.
 
 2024-07-18:
-- Convert .HEIC image to .jpg
+- Convert .HEIC image to .jpg [2024-07-20 combined into any2jpg].
 
 2024-07-19:
 - Extract audio segment from an audio file.
@@ -20,8 +20,11 @@ FEATURES:
 - Chop audio into intervals.
 - Delete folders in the Shell.
 
+2024-07-20:
+- Convert any image (e.g., .HEIC, .webp) to .jpg.
+
 Created: 2024-07-12
-Updated: 2024-07-19
+Updated: 2024-07-20
 """
 
 import cv2
@@ -86,15 +89,23 @@ class ImageOperations:
 
         return scan
 
-    def heic2jpg(path):
-        """HEIC to JPG conversion using pillow_heif.
-        Ref:
-        https://stackoverflow.com/questions/54395735/how-to-work-with-heic-image-file-types-in-python
+    def any2jpg(path):
+        """Convert any image (e.g., .HEIC, .webp) to .jpg.
+
+        HEIC Ref: https://stackoverflow.com/questions/54395735/how-to-work-with-heic-image-file-types-in-python
         """
-        from pillow_heif import register_heif_opener
-        register_heif_opener()
-        image = Image.open(path)
-        image.save(path.rstrip('.HEIC').rstrip('.heic') + '.jpg')
+        if os.path.isdir(path):
+            return
+        root, ext = os.path.splitext(path)
+        ext = ext.lower()
+        if ext == ".jpg":
+            return
+        if ext == ".heic":
+            from pillow_heif import register_heif_opener
+            register_heif_opener()
+
+        img = Image.open(path)
+        img.save(root+".jpg")
 
 class AudioOperations:
     def extract_audio(file, start="00:00:00", stop="00:00:15", output="extracted.mp3"):
@@ -222,7 +233,6 @@ class TextOperations:
 
 img2scan = ImageOperations.img2scan
 img2text = ImageOperations.img2text
-heic2jpg = ImageOperations.heic2jpg
 curl2win = TextOperations.curl2win
 extract_audio = AudioOperations.extract_audio
 speech2text = AudioOperations.speech2text
@@ -230,6 +240,7 @@ file2text = FileOperations.file2text
 summarize = TextOperations.summarize
 chop = AudioOperations.chop
 delete = FileOperations.delete
+any2jpg = ImageOperations.any2jpg
 
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
@@ -240,4 +251,5 @@ if __name__ == "__main__":
     # chop("audio.mp3", interval="00:01:00", output_dir="chopped_output")
     # speech2text("audio.mp3", output="output.txt", model="canary")
     # summarize(file2text("text.txt"), output="summary.txt")
+    # any2jpg("image.webp")
     pass
