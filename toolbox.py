@@ -15,6 +15,7 @@ FEATURES:
 2024-07-19:
 - Extract audio segment from an audio file.
 - Speech to text conversion using OpenAI Whisper.
+- Text summarize using qwen2 72b model.
 
 Created: 2024-07-12
 Updated: 2024-07-19
@@ -127,12 +128,44 @@ class MediaOperations:
             f.write(r)
         print(r)
 
+class FileOperations:
+    def file2text(path):
+        with open(path, "r") as f:
+            return f.read()
+
+class TextOperations:
+    def summarize(text, output="summary.txt"):
+        """Summarize text using an ollama model.
+        """
+        import ollama
+
+        prompt = f"""
+            Create a bullet point summary of the following text:
+            {text}
+        """
+        print("prompt:", prompt)
+        stream = ollama.chat(
+            model='qwen2:72b',
+            messages=[{
+                'role': 'user',
+                'content': prompt}],
+            stream=True,
+        )
+        r = ""
+        for chunk in stream:
+            print(chunk['message']['content'], end='', flush=True)
+            r += chunk['message']['content']
+        with open(output, "w") as f:
+            f.write(r)
+
 img2scan = ImageOperations.img2scan
 img2text = ImageOperations.img2text
 heic2jpg = ImageOperations.heic2jpg
 curl2win = CommandOperations.curl2win
 extract_audio = MediaOperations.extract_audio
 speech2text = MediaOperations.speech2text
+file2text = FileOperations.file2text
+summarize = TextOperations.summarize
 
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
@@ -140,4 +173,5 @@ if __name__ == "__main__":
     # heic2jpg("image.HEIC")
     # curl2win()
     # extract_audio("audio.mp3", output="extracted.mp3")
-    speech2text("audio.mp3", output="output.txt")
+    # speech2text("audio.mp3", output="output.txt")
+    summarize(file2text("text.txt"), output="summary.txt")
