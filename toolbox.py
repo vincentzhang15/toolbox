@@ -116,7 +116,9 @@ class MediaOperations:
         print("Running:", cmd)
         subprocess.run(cmd, shell=True)
     def speech2text(path, output="output.txt"):
-        """Convert speech to text with OpenAI Whisper."""
+        """Convert speech to text with OpenAI Whisper.
+        https://github.com/openai/whisper
+        """
         import whisper
         model = whisper.load_model("large")
         result = model.transcribe(path)
