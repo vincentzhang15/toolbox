@@ -14,8 +14,10 @@ FEATURES:
 
 2024-07-19:
 - Extract audio segment from an audio file.
-- Speech to text conversion using OpenAI Whisper.
-- Text summarize using qwen2 72b model.
+- Speech to text conversion using AI model (OpenAI Whisper & Nvidia NeMo Canary 1b).
+- Text summarize using AI model (Alibaba Qwen2 72b).
+- Chop audio into intervals.
+- Delete folders in the Shell.
 
 Created: 2024-07-12
 Updated: 2024-07-19
@@ -29,6 +31,8 @@ from pytesseract import Output
 import pyperclip
 import re
 import subprocess
+import torch
+import os
 
 class ImageOperations:
     def _draw_rectangles(img, objs):
@@ -109,21 +113,70 @@ class CommandOperations:
         print("Copied:", curl)
 
 class MediaOperations:
-    def extract_audio(path, start="00:00:00", stop="00:00:15", output="extracted.mp3"):
+    def extract_audio(file, start="00:00:00", stop="00:00:15", output="extracted.mp3"):
         """Extract audio segment.
         Input and output files should both be .mp3.
         """
-        cmd = rf"ffmpeg -i {path} -ss {start} -to {stop} -c copy -acodec copy -y {output}"
+        cmd = rf"ffmpeg -i {file} -ss {start} -to {stop} -c copy -acodec copy -y {output}"
         print("Running:", cmd)
         subprocess.run(cmd, shell=True)
-    def speech2text(path, output="output.txt"):
-        """Convert speech to text with OpenAI Whisper.
-        https://github.com/openai/whisper
+    def chop(file, interval="00:01:00", output_dir="chopped_output"):
+        """Chop audio into intervals.
         """
-        import whisper
-        model = whisper.load_model("large")
-        result = model.transcribe(path)
-        r = result["text"]
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        else:
+            raise ValueError(f"Output directory {output_dir} already exists.")
+        cmd = rf"ffmpeg -i {file} -f segment -segment_time {interval} -c copy -y {output_dir}/out%03d.mp3"
+        print("Running:", cmd)
+        subprocess.run(cmd, shell=True)
+    def speech2text(path, output="output.txt", model="canary"):
+        """Convert speech to text.
+        """
+        def whisper():
+            """Use OpenAI Whisper model.
+            https://github.com/openai/whisper
+            """
+            import whisper
+            model = whisper.load_model("large")
+            result = model.transcribe(path)
+            return result["text"]
+        def canary():
+            """Use Nvidia Canary 1b model.
+            https://huggingface.co/nvidia/canary-1b
+            """
+            from nemo.collections.asr.models import EncDecMultiTaskModel
+
+            # load model
+            canary_model = EncDecMultiTaskModel.from_pretrained('nvidia/canary-1b')
+
+            # update dcode params
+            decode_cfg = canary_model.cfg.decoding
+            decode_cfg.beam.beam_size = 1
+            canary_model.change_decoding_strategy(decode_cfg)
+
+            try:
+                predicted_text = canary_model.transcribe(path)
+
+                return "\n".join(predicted_text)
+            except torch.cuda.OutOfMemoryError:
+                chop(path, interval="00:01:00", output_dir="chopped_output")
+                res = ""
+                for f in os.listdir("chopped_output"):
+                    predicted_text = canary_model.transcribe(f"chopped_output/{f}")
+                    res += "\n".join(predicted_text)
+                    print(predicted_text)
+                delete("chopped_output", force=True)
+                return res
+
+        r = None
+        if model=="whisper":
+            r = whisper()
+        elif model=="canary":
+            r = canary()
+        else:
+            raise ValueError("No speech2text model specified.")
+
         with open(output, "w") as f:
             f.write(r)
         print(r)
@@ -132,6 +185,15 @@ class FileOperations:
     def file2text(path):
         with open(path, "r") as f:
             return f.read()
+    def delete(path, force=False):
+        if not force:
+            input(f"WARNING: Deleting {path}. Press Enter to continue.")
+        if os.path.exists(path):
+            cmd = f"rm -r {path}"
+            print("Running:", cmd)
+            subprocess.run(cmd, shell=True)
+        else:
+            raise ValueError(f"File {path} does not exist.")
 
 class TextOperations:
     def summarize(text, output="summary.txt"):
@@ -166,6 +228,8 @@ extract_audio = MediaOperations.extract_audio
 speech2text = MediaOperations.speech2text
 file2text = FileOperations.file2text
 summarize = TextOperations.summarize
+chop = MediaOperations.chop
+delete = FileOperations.delete
 
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
@@ -173,5 +237,7 @@ if __name__ == "__main__":
     # heic2jpg("image.HEIC")
     # curl2win()
     # extract_audio("audio.mp3", output="extracted.mp3")
-    # speech2text("audio.mp3", output="output.txt")
-    summarize(file2text("text.txt"), output="summary.txt")
+    # chop("audio.mp3", interval="00:01:00", output_dir="chopped_output")
+    # speech2text("audio.mp3", output="output.txt", model="canary")
+    # summarize(file2text("text.txt"), output="summary.txt")
+    pass

@@ -1,4 +1,5 @@
 *.jpg
 *.png
+*.mp3
 *.txt
 venv
