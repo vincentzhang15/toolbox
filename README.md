@@ -17,12 +17,13 @@ Toolbox for performing common operations offline.
     - Image of document to scanned image.
     - Image of document to text file.
     - Convert .HEIC image to .jpg
-- Command Tools
-    - Convert curl command to be windows compatible.
-- Media Tools
+- Audio Tools
     - Extract audio segment from an audio file.
     - Speech to text conversion using AI model (OpenAI Whisper & Nvidia NeMo Canary 1b).
-    - Text summarize using AI model (Alibaba Qwen2 72b).
     - Chop audio into intervals.
+- Text Tools
+    - Convert curl command to be windows compatible.
+    - Text summarize using AI model (Alibaba Qwen2 72b).
 - File Tools
+    - Convert file to text string.
     - Delete folders in the Shell.

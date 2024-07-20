@@ -15,6 +15,7 @@ FEATURES:
 2024-07-19:
 - Extract audio segment from an audio file.
 - Speech to text conversion using AI model (OpenAI Whisper & Nvidia NeMo Canary 1b).
+- Convert file to text string.
 - Text summarize using AI model (Alibaba Qwen2 72b).
 - Chop audio into intervals.
 - Delete folders in the Shell.
@@ -95,24 +96,7 @@ class ImageOperations:
         image = Image.open(path)
         image.save(path.rstrip('.HEIC').rstrip('.heic') + '.jpg')
 
-class CommandOperations:
-    def curl2win():
-        """Copy curl command to clipboard and this method will replace the
-        clipboard with the converted windows-compatible command.
-        """
-        curl = pyperclip.paste()
-        curl = curl.replace('\\', '^')
-        a,b = curl.split('-d')
-        b = b.replace("\r\n", " ")
-        b = b.replace('\"', '\\"')
-        b = b.replace("'", '"')
-        b = re.sub("\s{2,}", "", b)
-
-        curl = f"{a}-d{b}"
-        pyperclip.copy(curl)
-        print("Copied:", curl)
-
-class MediaOperations:
+class AudioOperations:
     def extract_audio(file, start="00:00:00", stop="00:00:15", output="extracted.mp3"):
         """Extract audio segment.
         Input and output files should both be .mp3.
@@ -196,6 +180,22 @@ class FileOperations:
             raise ValueError(f"File {path} does not exist.")
 
 class TextOperations:
+    def curl2win():
+        """Copy curl command to clipboard and this method will replace the
+        clipboard with the converted windows-compatible command.
+        """
+        curl = pyperclip.paste()
+        curl = curl.replace('\\', '^')
+        a,b = curl.split('-d')
+        b = b.replace("\r\n", " ")
+        b = b.replace('\"', '\\"')
+        b = b.replace("'", '"')
+        b = re.sub("\s{2,}", "", b)
+
+        curl = f"{a}-d{b}"
+        pyperclip.copy(curl)
+        print("Copied:", curl)
+
     def summarize(text, output="summary.txt"):
         """Summarize text using an ollama model.
         """
@@ -223,12 +223,12 @@ class TextOperations:
 img2scan = ImageOperations.img2scan
 img2text = ImageOperations.img2text
 heic2jpg = ImageOperations.heic2jpg
-curl2win = CommandOperations.curl2win
-extract_audio = MediaOperations.extract_audio
-speech2text = MediaOperations.speech2text
+curl2win = TextOperations.curl2win
+extract_audio = AudioOperations.extract_audio
+speech2text = AudioOperations.speech2text
 file2text = FileOperations.file2text
 summarize = TextOperations.summarize
-chop = MediaOperations.chop
+chop = AudioOperations.chop
 delete = FileOperations.delete
 
 if __name__ == "__main__":
