@@ -14,6 +14,7 @@ FEATURES:
 
 2024-07-19:
 - Extract audio segment from an audio file.
+- Speech to text conversion using OpenAI Whisper.
 
 Created: 2024-07-12
 Updated: 2024-07-19
@@ -114,15 +115,27 @@ class MediaOperations:
         cmd = rf"ffmpeg -i {path} -ss {start} -to {stop} -c copy -acodec copy -y {output}"
         print("Running:", cmd)
         subprocess.run(cmd, shell=True)
+    def speech2text(path, output="output.txt"):
+        """Convert speech to text with OpenAI Whisper."""
+        import whisper
+        model = whisper.load_model("large")
+        result = model.transcribe(path)
+        r = result["text"]
+        with open(output, "w") as f:
+            f.write(r)
+        print(r)
 
 img2scan = ImageOperations.img2scan
 img2text = ImageOperations.img2text
 heic2jpg = ImageOperations.heic2jpg
 curl2win = CommandOperations.curl2win
 extract_audio = MediaOperations.extract_audio
+speech2text = MediaOperations.speech2text
 
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
     # img2text('Consolidated.png')
+    # heic2jpg("image.HEIC")
     # curl2win()
-    extract_audio("audio.mp3", output="extracted.mp3")
+    # extract_audio("audio.mp3", output="extracted.mp3")
+    speech2text("audio.mp3", output="output.txt")

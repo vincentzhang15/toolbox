@@ -9,3 +9,4 @@ Toolbox for performing common operations offline.
 - Convert curl command to be windows compatible.
 - Convert .HEIC image to .jpg
 - Extract audio segment from an audio file.
+- Speech to text conversion using OpenAI Whisper.
