@@ -27,4 +27,5 @@ Toolbox for performing common operations offline.
     - Text summarize using AI model (Alibaba Qwen2 72b).
 - File Tools
     - Convert file to text string.
-    - Delete folders in the Shell.
+    - Delete folders.
+    - Purge all node_modules folders in a directory and subdirectories.

@@ -24,8 +24,11 @@ FEATURES:
 - Convert any image (e.g., .HEIC, .webp) to .jpg.
 - Crop the largest square with face centered in the image using an OpenCV pre-trained Haar cascade for face detection.
 
+2024-07-21:
+- Purge all node_modules folders in a directory and subdirectories.
+
 Created: 2024-07-12
-Updated: 2024-07-20
+Updated: 2024-07-21
 """
 
 import cv2
@@ -38,6 +41,7 @@ import re
 import subprocess
 import torch
 import os
+import shutil
 
 class ImageOperations:
     def _draw_rectangles(img, objs):
@@ -230,11 +234,26 @@ class FileOperations:
         if not force:
             input(f"WARNING: Deleting {path}. Press Enter to continue.")
         if os.path.exists(path):
-            cmd = f"rm -r {path}"
-            print("Running:", cmd)
-            subprocess.run(cmd, shell=True)
+            shutil.rmtree(path)
+            print(f"Deleted: {path}")
         else:
             raise ValueError(f"File {path} does not exist.")
+    def purge_node_modules(path):
+        """Delete all node_modules folders given directory and subdirectories.
+        """
+        paths = []
+        for root, dirs, _ in os.walk(path, topdown=True):
+            if "node_modules" in dirs:
+                d = os.path.join(root, "node_modules")
+                print(d)
+                paths.append(d)
+            dirs[:] = [d for d in dirs if d!="node_modules"]
+        if len(paths) == 0:
+            print(f"No node_modules folders found in {path}.")
+            return
+        if input("Purge? (Y/n): ") == "Y":
+            for p in paths:
+                delete(p, force=True)
 
 class TextOperations:
     def curl2win():
@@ -288,6 +307,7 @@ chop = AudioOperations.chop
 delete = FileOperations.delete
 any2jpg = ImageOperations.any2jpg
 crop_face_centered = ImageOperations.crop_face_centered
+purge_node_modules = FileOperations.purge_node_modules
 
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
@@ -300,4 +320,5 @@ if __name__ == "__main__":
     # summarize(file2text("text.txt"), output="summary.txt")
     # any2jpg("image.webp")
     # crop_face_centered("image.jpg", output="cropped.jpg")
+    # purge_node_modules("D:\\")
     pass
