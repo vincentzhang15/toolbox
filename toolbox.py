@@ -108,7 +108,7 @@ class ImageOperations:
         img = Image.open(path)
         img.save(root+".jpg")
 
-    def crop_face_centered(path, output="cropped.jpg"):
+    def crop_face_centered(path, output="cropped.jpg", method="max"):
         """Crop the largest square with face centered in the image.
         """
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -119,8 +119,38 @@ class ImageOperations:
             raise ValueError("No faces detected.")
         x,y,w,h = faces[0]
         cx,cy = x+w//2, y+h//2
-        m = min(cx, cy, img.shape[1]-cx, img.shape[0]-cy)
-        crop = img[cy-m:cy+m, cx-m:cx+m]
+
+        def center_strict():
+            """Face will strictly be in the center of the square."""
+            m = min(cx, cy, img.shape[1]-cx, img.shape[0]-cy)
+            return cx-m, cx+m, cy-m, cy+m
+        def center_max():
+            """As much of the image will be included as possible with the face contained within."""
+            length = min(img.shape[0], img.shape[1])//2
+            x1 = cx - length
+            x2 = cx + length
+            y1 = cy - length
+            y2 = cy + length
+            if x1 < 0:
+                x2 += -x1
+                x1 = 0
+            if x2 > img.shape[1]:
+                x1 -= x2 - img.shape[1]
+                x2 = img.shape[1]
+            if y1 < 0:
+                y2 += -y1
+                y1 = 0
+            if y2 > img.shape[0]:
+                y1 -= y2 - img.shape[0]
+                y2 = img.shape[0]
+            return x1, x2, y1, y2
+
+        x1,x2,y1,y2 = None,None,None,None
+        if method == "strict":
+            x1,x2,y1,y2 = center_strict()
+        elif method == "max":
+            x1,x2,y1,y2 = center_max()
+        crop = img[y1:y2, x1:x2]        
         cv2.imwrite(output, crop)
 
 class AudioOperations:
@@ -269,5 +299,5 @@ if __name__ == "__main__":
     # speech2text("audio.mp3", output="output.txt", model="canary")
     # summarize(file2text("text.txt"), output="summary.txt")
     # any2jpg("image.webp")
-    crop_face_centered("image.jpg", output="cropped.jpg")
+    # crop_face_centered("image.jpg", output="cropped.jpg")
     pass
