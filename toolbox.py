@@ -22,6 +22,7 @@ FEATURES:
 
 2024-07-20:
 - Convert any image (e.g., .HEIC, .webp) to .jpg.
+- Crop the largest square with face centered in the image using an OpenCV pre-trained Haar cascade for face detection.
 
 Created: 2024-07-12
 Updated: 2024-07-20
@@ -106,6 +107,21 @@ class ImageOperations:
 
         img = Image.open(path)
         img.save(root+".jpg")
+
+    def crop_face_centered(path, output="cropped.jpg"):
+        """Crop the largest square with face centered in the image.
+        """
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        img = cv2.imread(path)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        if len(faces) == 0:
+            raise ValueError("No faces detected.")
+        x,y,w,h = faces[0]
+        cx,cy = x+w//2, y+h//2
+        m = min(cx, cy, img.shape[1]-cx, img.shape[0]-cy)
+        crop = img[cy-m:cy+m, cx-m:cx+m]
+        cv2.imwrite(output, crop)
 
 class AudioOperations:
     def extract_audio(file, start="00:00:00", stop="00:00:15", output="extracted.mp3"):
@@ -241,6 +257,7 @@ summarize = TextOperations.summarize
 chop = AudioOperations.chop
 delete = FileOperations.delete
 any2jpg = ImageOperations.any2jpg
+crop_face_centered = ImageOperations.crop_face_centered
 
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
@@ -252,4 +269,5 @@ if __name__ == "__main__":
     # speech2text("audio.mp3", output="output.txt", model="canary")
     # summarize(file2text("text.txt"), output="summary.txt")
     # any2jpg("image.webp")
+    crop_face_centered("image.jpg", output="cropped.jpg")
     pass
