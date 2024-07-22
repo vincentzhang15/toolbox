@@ -154,8 +154,8 @@ class ImageOperations:
             x1,x2,y1,y2 = center_strict()
         elif method == "max":
             x1,x2,y1,y2 = center_max()
-        crop = img[y1:y2, x1:x2]        
-        cv2.imwrite(output, crop)
+        crop = img[y1:y2, x1:x2]
+        cv2.imwrite(os.path.join(os.path.dirname(path), output), crop)
 
 class AudioOperations:
     def extract_audio(file, start="00:00:00", stop="00:00:15", output="extracted.mp3"):
@@ -312,13 +312,12 @@ purge_node_modules = FileOperations.purge_node_modules
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
     # img2text('Consolidated.png')
-    # heic2jpg("image.HEIC")
     # curl2win()
     # extract_audio("audio.mp3", output="extracted.mp3")
     # chop("audio.mp3", interval="00:01:00", output_dir="chopped_output")
     # speech2text("audio.mp3", output="output.txt", model="canary")
     # summarize(file2text("text.txt"), output="summary.txt")
     # any2jpg("image.webp")
-    # crop_face_centered("image.jpg", output="cropped.jpg")
+    # crop_face_centered("image.jpg")
     # purge_node_modules("D:\\")
     pass
