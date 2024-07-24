@@ -27,8 +27,11 @@ FEATURES:
 2024-07-21:
 - Purge all node_modules folders in a directory and subdirectories.
 
+2024-07-24:
+- LLM query feature that generalizes text summary feature.
+
 Created: 2024-07-12
-Updated: 2024-07-21
+Updated: 2024-07-24
 """
 
 import cv2
@@ -272,18 +275,18 @@ class TextOperations:
         pyperclip.copy(curl)
         print("Copied:", curl)
 
-    def summarize(text, output="summary.txt"):
-        """Summarize text using an ollama model.
+    def query(text, task, output="result.txt", model="qwen2:72b"):
+        """Query ollama model.
         """
         import ollama
 
         prompt = f"""
-            Create a bullet point summary of the following text:
+            {task}
             {text}
         """
         print("prompt:", prompt)
         stream = ollama.chat(
-            model='qwen2:72b',
+            model=model,
             messages=[{
                 'role': 'user',
                 'content': prompt}],
@@ -295,6 +298,11 @@ class TextOperations:
             r += chunk['message']['content']
         with open(output, "w") as f:
             f.write(r)
+
+    def summarize(text, output="summary.txt", model="qwen2:72b"):
+        """Summarize text using an ollama model.
+        """
+        query(text, "Create a bullet point summary of the following text.", output, model)
 
 img2scan = ImageOperations.img2scan
 img2text = ImageOperations.img2text
@@ -308,6 +316,7 @@ delete = FileOperations.delete
 any2jpg = ImageOperations.any2jpg
 crop_face_centered = ImageOperations.crop_face_centered
 purge_node_modules = FileOperations.purge_node_modules
+query = TextOperations.query
 
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
@@ -316,8 +325,9 @@ if __name__ == "__main__":
     # extract_audio("audio.mp3", output="extracted.mp3")
     # chop("audio.mp3", interval="00:01:00", output_dir="chopped_output")
     # speech2text("audio.mp3", output="output.txt", model="canary")
-    # summarize(file2text("text.txt"), output="summary.txt")
+    # summarize(file2text("text.txt"), output="summary.txt", model="qwen2:72b")
     # any2jpg("image.webp")
     # crop_face_centered("image.jpg")
     # purge_node_modules("D:\\")
+    # query(file2text("text.txt"), "Create a clear list of action items for the following text.", output="result.txt", model="qwen2:72b")
     pass
