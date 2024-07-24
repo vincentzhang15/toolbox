@@ -32,6 +32,7 @@ Toolbox for performing common operations offline.
     - Convert curl command to be windows compatible.
     - Text summarize using AI model (Alibaba Qwen2 72b).
     - LLM query feature that generalizes text summary feature.
+    - Customize LLM prompt.
 - File Tools
     - Convert file to text string.
     - Delete folders.

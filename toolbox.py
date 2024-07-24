@@ -36,6 +36,7 @@ FEATURES:
 - Normalize audio volume.
 - Compress audio file.
 - Convert PDF to text.
+- Customize LLM prompt.
 
 Created: 2024-07-12
 Updated: 2024-07-24
@@ -327,14 +328,16 @@ class FileOperations:
         if input("Purge? (Y/n): ") == "Y":
             for p in paths:
                 delete(p, force=True)
-    def pdf2text(file):
+    def pdf2text(file, output=True):
         """Convert PDF to text.
         """
         from tika import parser
         raw = parser.from_file(file)
         text = raw['content']
-        with open(os.path.splitext(file)[0]+".txt", "w") as f:
-            f.write(text)
+        if output:
+            with open(os.path.splitext(file)[0]+".txt", "w") as f:
+                f.write(text)
+        return text
 
 class TextOperations:
     def curl2win():
@@ -361,7 +364,7 @@ class TextOperations:
         prompt = f"""
             {task}
             {text}
-        """
+        """.strip()
         print("prompt:", prompt)
         stream = ollama.chat(
             model=model,
@@ -382,6 +385,11 @@ class TextOperations:
         """
         query(text, "Create a bullet point summary of the following text.", output, model)
 
+    def prompt(instruction, output="result.txt", model="qwen2:72b-instruct"):
+        """Prompt ollama model.
+        """
+        query("", instruction, output, model)
+
 img2scan = ImageOperations.img2scan
 img2text = ImageOperations.img2text
 curl2win = TextOperations.curl2win
@@ -401,6 +409,7 @@ dir2mp3 = AudioOperations.dir2mp3
 normalize_audio = AudioOperations.normalize_audio
 compress_audio = AudioOperations.compress_audio
 pdf2text = FileOperations.pdf2text
+prompt = TextOperations.prompt
 
 def audio2summmary(file):
     speech2text(file, output="output.txt", model="canary")
@@ -426,5 +435,15 @@ if __name__ == "__main__":
     # purge_node_modules("D:\\")
     # query(file2text("text.txt"), "Create a clear list of action items for the following text.", output="result.txt", model="qwen2:72b-instruct")
     # audios2summary("/home/v/Desktop/folder")
-    pdf2text("file.pdf")
+    # pdf2text("file.pdf")
+    
+    instruction = f"""
+================
+TASK: Make a summary of the following text. Use the additional context provided to fill in missing information.
+================
+TEXT: {file2text("text.txt")}
+================
+CONTEXT: {pdf2text("file.pdf", output=False)}
+""".lstrip()
+    prompt(instruction, output="result.txt", model="qwen2:72b-instruct")
     pass
