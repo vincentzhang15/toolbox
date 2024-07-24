@@ -29,6 +29,12 @@ FEATURES:
 
 2024-07-24:
 - LLM query feature that generalizes text summary feature.
+- Automatically preprocess input to Nvidia NeMo Canary (speech-to-text) by converting audio to mono channel.
+- Merge audio files in a folder to a single .mp3 file.
+- Convert any audio file to mp3.
+- Convert all audio files in a directory to .mp3.
+- Normalize audio volume.
+- Compress audio file.
 
 Created: 2024-07-12
 Updated: 2024-07-24
@@ -45,6 +51,7 @@ import subprocess
 import torch
 import os
 import shutil
+import pprint
 
 class ImageOperations:
     def _draw_rectangles(img, objs):
@@ -181,6 +188,15 @@ class AudioOperations:
     def speech2text(path, output="output.txt", model="canary"):
         """Convert speech to text.
         """
+        def monify():
+            """Convert audio to mono channel.
+            """
+            root, ext = os.path.splitext(path)
+            mono = f"{root}_mono{ext}"
+            cmd = rf"ffmpeg -i {path} -ac 1 -y {mono}"
+            print("Running:", cmd)
+            subprocess.run(cmd, shell=True)
+            return mono
         def whisper():
             """Use OpenAI Whisper model.
             https://github.com/openai/whisper
@@ -193,6 +209,7 @@ class AudioOperations:
             """Use Nvidia Canary 1b model.
             https://huggingface.co/nvidia/canary-1b
             """
+            path = monify()
             from nemo.collections.asr.models import EncDecMultiTaskModel
 
             # load model
@@ -228,6 +245,58 @@ class AudioOperations:
         with open(output, "w") as f:
             f.write(r)
         print(r)
+    def any2mp3(path):
+        """Convert any audio file to .mp3.
+        """
+        root, ext = os.path.splitext(path)
+        ext = ext.lower()
+        if ext == ".mp3":
+            return
+        if ext in {".ogg", ".m4a"}:
+            cmd = rf"ffmpeg -i {path} {root}.mp3"
+            print("Running:", cmd)
+            subprocess.run(cmd, shell=True)
+        else:
+            print(f"Unsupported audio file format: {ext}")
+    def dir2mp3(path):
+        """Convert all audio files in a directory to .mp3.
+        """
+        for f in os.listdir(path):
+            if not os.path.exists(os.path.join(path, f"{os.path.splitext(f)[0]}.mp3")):
+                any2mp3(os.path.join(path, f))
+
+    def normalize_audio(path, output="normalized.mp3"):
+        """Normalize audio.
+        """
+        cmd = rf"ffmpeg-normalize {path} -o {os.path.dirname(path)}/{output} -c:a mp3 -b:a 192k -pr"
+        print("Running:", cmd)
+        subprocess.run(cmd, shell=True)
+    def merge_audio(folder, normalize=False, output="merged.mp3"):
+        """Merge audio files in a folder.
+        """
+        if not os.path.exists(folder):
+            raise ValueError(f"Folder {folder} does not exist.")
+        dir2mp3(folder)
+        files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+        files = [os.path.join(folder, f) for f in files if os.path.splitext(f)[1] == ".mp3"]
+        if len(files) == 0:
+            raise ValueError(f"No audio files found in {folder}.")
+        files.sort()
+        pprint.pprint(files)
+        if input("Enter 'Y' to confirm files to merge: ")!="Y": return
+
+        cmd = rf'''ffmpeg -i "concat:{'|'.join(files)}" -c copy -y {folder}/{output}'''
+        print("Running:", cmd)
+        subprocess.run(cmd, shell=True)
+
+        if normalize:
+            normalize_audio(os.path.join(folder, output))
+    def compress_audio(path, output="compressed.mp3"):
+        """Compress audio.
+        """
+        cmd = rf"ffmpeg -i {path} -b:a 64k -y {os.path.dirname(path)}/{output}"
+        print("Running:", cmd)
+        subprocess.run(cmd, shell=True)
 
 class FileOperations:
     def file2text(path):
@@ -275,7 +344,7 @@ class TextOperations:
         pyperclip.copy(curl)
         print("Copied:", curl)
 
-    def query(text, task, output="result.txt", model="qwen2:72b"):
+    def query(text, task, output="result.txt", model="qwen2:72b-instruct"):
         """Query ollama model.
         """
         import ollama
@@ -299,7 +368,7 @@ class TextOperations:
         with open(output, "w") as f:
             f.write(r)
 
-    def summarize(text, output="summary.txt", model="qwen2:72b"):
+    def summarize(text, output="summary.txt", model="qwen2:72b-instruct"):
         """Summarize text using an ollama model.
         """
         query(text, "Create a bullet point summary of the following text.", output, model)
@@ -317,6 +386,23 @@ any2jpg = ImageOperations.any2jpg
 crop_face_centered = ImageOperations.crop_face_centered
 purge_node_modules = FileOperations.purge_node_modules
 query = TextOperations.query
+merge_audio = AudioOperations.merge_audio
+any2mp3 = AudioOperations.any2mp3
+dir2mp3 = AudioOperations.dir2mp3
+normalize_audio = AudioOperations.normalize_audio
+compress_audio = AudioOperations.compress_audio
+
+def audio2summmary(file):
+    speech2text(file, output="output.txt", model="canary")
+    summarize(file2text("output.txt"), output="summary.txt", model="qwen2:72b-instruct")
+
+def audios2summary(folder):
+    merge_audio(folder, normalize=True, output="merged.mp3")
+    normalize_audio(f"{folder}/merged.mp3", output="normalized.mp3")
+    compress_audio(f"{folder}/normalized.mp3", output="compressed.mp3")
+    audio2summmary(f"{folder}/compressed.mp3")
+    delete(f"{folder}/merged.mp3", force=True)
+    delete(f"{folder}/normalized.mp3", force=True)
 
 if __name__ == "__main__":
     # img2scan('Consolidated.png')
@@ -324,10 +410,10 @@ if __name__ == "__main__":
     # curl2win()
     # extract_audio("audio.mp3", output="extracted.mp3")
     # chop("audio.mp3", interval="00:01:00", output_dir="chopped_output")
-    # speech2text("audio.mp3", output="output.txt", model="canary")
-    # summarize(file2text("text.txt"), output="summary.txt", model="qwen2:72b")
+    # audio2summmary("audio.mp3")
     # any2jpg("image.webp")
     # crop_face_centered("image.jpg")
     # purge_node_modules("D:\\")
-    # query(file2text("text.txt"), "Create a clear list of action items for the following text.", output="result.txt", model="qwen2:72b")
+    # query(file2text("text.txt"), "Create a clear list of action items for the following text.", output="result.txt", model="qwen2:72b-instruct")
+    # audios2summary("/home/v/Desktop/folder")
     pass
