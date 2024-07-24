@@ -443,7 +443,13 @@ TASK: Make a summary of the following text. Use the additional context provided 
 ================
 TEXT: {file2text("text.txt")}
 ================
-CONTEXT: {pdf2text("file.pdf", output=False)}
+CONTEXT: {file2text("file.txt")}
+================
+REQUIREMENTS:
+- Perform only the task specified in "TASK".
+- Begin by giving me a direct quote of the first sentence I told you.
+- Then repeat to me what your task is.
+- Then perform the task.
 """.lstrip()
     prompt(instruction, output="result.txt", model="qwen2:72b-instruct")
     pass
