@@ -36,3 +36,4 @@ Toolbox for performing common operations offline.
     - Convert file to text string.
     - Delete folders.
     - Purge all node_modules folders in a directory and subdirectories.
+    - Convert PDF to text.

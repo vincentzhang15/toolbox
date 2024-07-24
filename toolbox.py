@@ -35,6 +35,7 @@ FEATURES:
 - Convert all audio files in a directory to .mp3.
 - Normalize audio volume.
 - Compress audio file.
+- Convert PDF to text.
 
 Created: 2024-07-12
 Updated: 2024-07-24
@@ -326,6 +327,14 @@ class FileOperations:
         if input("Purge? (Y/n): ") == "Y":
             for p in paths:
                 delete(p, force=True)
+    def pdf2text(file):
+        """Convert PDF to text.
+        """
+        from tika import parser
+        raw = parser.from_file(file)
+        text = raw['content']
+        with open(os.path.splitext(file)[0]+".txt", "w") as f:
+            f.write(text)
 
 class TextOperations:
     def curl2win():
@@ -391,6 +400,7 @@ any2mp3 = AudioOperations.any2mp3
 dir2mp3 = AudioOperations.dir2mp3
 normalize_audio = AudioOperations.normalize_audio
 compress_audio = AudioOperations.compress_audio
+pdf2text = FileOperations.pdf2text
 
 def audio2summmary(file):
     speech2text(file, output="output.txt", model="canary")
@@ -416,4 +426,5 @@ if __name__ == "__main__":
     # purge_node_modules("D:\\")
     # query(file2text("text.txt"), "Create a clear list of action items for the following text.", output="result.txt", model="qwen2:72b-instruct")
     # audios2summary("/home/v/Desktop/folder")
+    pdf2text("file.pdf")
     pass
