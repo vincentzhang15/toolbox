@@ -130,7 +130,7 @@ class ImageOperations:
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         img = cv2.imread(path)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        faces = face_cascade.detectMultiScale(gray, 1.1, 5)
         if len(faces) == 0:
             raise ValueError("No faces detected.")
         x,y,w,h = faces[0]
@@ -437,19 +437,19 @@ if __name__ == "__main__":
     # audios2summary("/home/v/Desktop/folder")
     # pdf2text("file.pdf")
     
-    instruction = f"""
-================
-TASK: Make a summary of the following text. Use the additional context provided to fill in missing information.
-================
-TEXT: {file2text("text.txt")}
-================
-CONTEXT: {file2text("file.txt")}
-================
-REQUIREMENTS:
-- Perform only the task specified in "TASK".
-- Begin by giving me a direct quote of the first sentence I told you.
-- Then repeat to me what your task is.
-- Then perform the task.
-""".lstrip()
-    prompt(instruction, output="result.txt", model="qwen2:72b-instruct")
+#     instruction = f"""
+# ================
+# TASK: Make a summary of the following text. Use the additional context provided to fill in missing information.
+# ================
+# TEXT: {file2text("text.txt")}
+# ================
+# CONTEXT: {file2text("file.txt")}
+# ================
+# REQUIREMENTS:
+# - Perform only the task specified in "TASK".
+# - Begin by giving me a direct quote of the first sentence I told you.
+# - Then repeat to me what your task is.
+# - Then perform the task.
+# """.lstrip()
+#     prompt(instruction, output="result.txt", model="qwen2:72b-instruct")
     pass
